@@ -1,0 +1,13 @@
+FROM almalinux:latest AS builder
+ARG APP_NAME=app
+ENV APP_NAME=${APP_NAME}
+WORKDIR /app
+COPY app.rpm .
+
+RUN dnf install -y epel-release \
+    && dnf update -y \
+    && dnf install -y wget \
+    && dnf install -y ./app.rpm \
+    && dnf clean all
+
+CMD ["/bin/sh", "-c", "exec /usr/bin/$APP_NAME"]

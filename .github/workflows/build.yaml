@@ -17,6 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    inputs:
+      rpm_url:
+        description: URL of the RPM to package
+        required: true
+        type: string
+      app_name:
+        description: Installed binary name (under /usr/bin in the RPM)
+        required: true
+        type: string
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,11 +41,11 @@ jobs:
 
       - name: Build container image
         run: |
-          sudo podman build \
-            --build-arg "APP_NAME=${{ inputs.app_name }}" \
-            -t rpm-appimage:build \
-            -f ContainerFile \
-            .
+          podman build \
+          --build-arg "APP_NAME=${{ inputs.app_name }}" \
+          -t rpm-appimage:build \
+          -f ContainerFile \
+          .
 
       - name: Build AppImage from image rootfs
         env:
@@ -50,3 +60,11 @@ jobs:
         with:
           name: appimage
           path: "*.AppImage"
+
+      - name: upload to release
+        uses: softprops/action-gh-release@master
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: "*.AppImage"
+          asset_name: ${{ inputs.app_name }}.AppImage
+          asset_content_type: application/octet-stream

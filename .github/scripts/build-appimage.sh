@@ -33,7 +33,7 @@ cat > "$APPDIR/${APP_NAME}.desktop" <<EOF
 Type=Application
 Name=${APP_NAME}
 Exec=${APP_NAME}
-Icon=/usr/share/icons/hicolor/256x256@2/apps/*.png
+Icon=/usr/share/icons/hicolor/256x256@2/apps/*
 Categories=Utility;
 Terminal=false
 EOF

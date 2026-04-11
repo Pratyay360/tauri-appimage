@@ -9,9 +9,9 @@ OUT="${OUT:-${APP_NAME}-x86_64.AppImage}"
 rm -rf "$APPDIR"
 mkdir "$APPDIR"
 
-CID=$(sudo podman create --pull=never "$IMAGE_REF")
-sudo podman export "$CID" | tar -xC "$APPDIR"
-sudo podman rm "$CID"
+CID=$(podman create --pull=never "$IMAGE_REF")
+podman export "$CID" | tar -xC "$APPDIR"
+podman rm "$CID"
 
 cat > "$APPDIR/AppRun" <<'APPRUN'
 #!/bin/bash

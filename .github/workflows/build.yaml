@@ -61,6 +61,7 @@ jobs:
           path: "*.AppImage"
 
       - name: upload to release
+        if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@master
         with:
           upload_url: ${{ github.event.release.upload_url }}

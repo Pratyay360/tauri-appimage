@@ -17,15 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    inputs:
-      rpm_url:
-        description: URL of the RPM to package
-        required: true
-        type: string
-      app_name:
-        description: Installed binary name (under /usr/bin in the RPM)
-        required: true
-        type: string
 
     steps:
       - name: Checkout
@@ -62,6 +53,7 @@ jobs:
           path: "*.AppImage"
 
       - name: upload to release
+        if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@master
         with:
           upload_url: ${{ github.event.release.upload_url }}

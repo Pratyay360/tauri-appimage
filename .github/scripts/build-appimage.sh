@@ -32,8 +32,8 @@ cat > "$APPDIR/${APP_NAME}.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=${APP_NAME}
-Exec=/usr/share/icons/hicolor/256x256@2/apps/*.png
-Icon=*.png
+Exec=${APP_NAME}
+Icon=/usr/share/icons/hicolor/256x256@2/apps/*.png
 Categories=Utility;
 Terminal=false
 EOF

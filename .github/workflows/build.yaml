@@ -11,21 +11,19 @@ on:
         description: Installed binary name (under /usr/bin in the RPM)
         required: true
         type: string
+      app_icon_url:
+        description: >-
+          Fallback icon URL (PNG/SVG/XPM). Used only if the RPM does not ship
+          usr/share/icons/hicolor/*/apps/<app_name>.*
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    inputs:
-      rpm_url:
-        description: URL of the RPM to package
-        required: true
-        type: string
-      app_name:
-        description: Installed binary name (under /usr/bin in the RPM)
-        required: true
-        type: string
 
     steps:
       - name: Checkout
@@ -50,6 +48,7 @@ jobs:
       - name: Build AppImage from image rootfs
         env:
           APP_NAME: ${{ inputs.app_name }}
+          APP_ICON_URL: ${{ inputs.app_icon_url }}
           VERSION: ${{ github.run_number }}
         run: |
           chmod +x .github/scripts/build-appimage.sh

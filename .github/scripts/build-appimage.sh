@@ -23,17 +23,35 @@ APPRUN
 sed -i "s#__APP_NAME__#${APP_NAME}#g" "$APPDIR/AppRun"
 chmod +x "$APPDIR/AppRun"
 
-# Minimal 1x1 PNG for Icon= in .desktop (appimagetool
+# Icon= uses the freedesktop icon name; files must live under AppDir/usr/share/icons/hicolor/
+ICON_NAME="${APP_NAME}"
+shopt -s nullglob
+icon_candidates=( "$APPDIR"/usr/share/icons/hicolor/*/apps/"${ICON_NAME}".{png,svg,xpm} )
+shopt -u nullglob
 
-
-
+if [[ ${#icon_candidates[@]} -eq 0 && -n "${APP_ICON_URL:-}" ]]; then
+  url_path="${APP_ICON_URL%%\?*}"
+  ext="${url_path##*.}"
+  ext="${ext,,}"
+  case "$ext" in
+    png|svg|xpm) ;;
+    *) ext=png ;;
+  esac
+  if [[ "$ext" == "svg" ]]; then
+    icon_dir="$APPDIR/usr/share/icons/hicolor/scalable/apps"
+  else
+    icon_dir="$APPDIR/usr/share/icons/hicolor/256x256/apps"
+  fi
+  mkdir -p "$icon_dir"
+  wget -qO "$icon_dir/${ICON_NAME}.${ext}" "$APP_ICON_URL"
+fi
 
 cat > "$APPDIR/${APP_NAME}.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=${APP_NAME}
 Exec=${APP_NAME}
-Icon=*.png
+Icon=${ICON_NAME}
 Categories=Utility;
 Terminal=false
 EOF

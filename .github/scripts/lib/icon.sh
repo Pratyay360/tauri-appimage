@@ -191,11 +191,6 @@ materialize_appdir_icon() {
       esac
     fi
 
-    if [[ ! -s "$final_icon_path" ]]; then
-      rm -f "$final_icon_path"
-      echo "ERROR: Downloaded icon materialization failed for APP_ICON_URL='$app_icon_url'." >&2
-      return 1
-    fi
     echo "$final_icon_path"
     return 0
   fi

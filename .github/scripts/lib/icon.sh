@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+SCALABLE_ICON_SCORE=100000
+
 create_default_desktop_file() {
   local appdir="$1"
   local app_name="$2"
@@ -65,7 +67,7 @@ find_hicolor_icon_candidate() {
     if [[ "$size_dir" =~ ^([0-9]+)x([0-9]+)$ ]]; then
       score="${BASH_REMATCH[1]}"
     elif [[ "$size_dir" == "scalable" ]]; then
-      score=100000
+      score=$SCALABLE_ICON_SCORE
     fi
 
     if (( score > best_score )); then
@@ -169,6 +171,9 @@ materialize_appdir_icon() {
     return 0
   fi
 
-  echo "ERROR: Icon '${icon_name}' from desktop file is missing. Expected one of '$appdir/${icon_name}.png', '$appdir/${icon_name}.svg', or '$appdir/${icon_name}.xpm'. Could not find matching icons in '$appdir/usr/share/icons/hicolor' or '$appdir/usr/share/pixmaps' (also tried APP_NAME='${app_name}'). Set APP_ICON_URL to a direct icon URL (.png/.svg/.xpm)." >&2
+  echo "ERROR: Icon '${icon_name}' from desktop file is missing." >&2
+  echo "Expected one of '$appdir/${icon_name}.png', '$appdir/${icon_name}.svg', or '$appdir/${icon_name}.xpm'." >&2
+  echo "Could not find matching icons in '$appdir/usr/share/icons/hicolor' or '$appdir/usr/share/pixmaps' (also tried APP_NAME='${app_name}')." >&2
+  echo "Set APP_ICON_URL to a direct icon URL (.png/.svg/.xpm)." >&2
   return 1
 }

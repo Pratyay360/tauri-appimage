@@ -39,7 +39,7 @@ fi
 final_icon_path="$(materialize_appdir_icon "$APPDIR" "$icon_name" "$APP_NAME" "${APP_ICON_URL:-}")"
 
 echo "Desktop file: $desktop_file"
-echo "Desktop Icon name: $icon_name"
+echo "Desktop icon name: $icon_name"
 echo "Final AppDir icon: $final_icon_path"
 
 wget -qO appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"

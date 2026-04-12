@@ -165,11 +165,48 @@ materialize_appdir_icon() {
   fi
 
   if [[ -n "$app_icon_url" ]]; then
+    local mime_type=""
     ext="$(resolve_icon_extension_from_url "$app_icon_url")"
     final_icon_path="$appdir/${icon_name}.${ext}"
-    if ! wget --timeout=30 --tries=2 --max-redirect=3 -qO "$final_icon_path" "$app_icon_url" || [[ ! -s "$final_icon_path" ]]; then
+    if ! wget --timeout=30 --tries=2 --max-redirect=3 -qO "$final_icon_path" "$app_icon_url"; then
       rm -f "$final_icon_path"
-      echo "ERROR: Failed to download icon from APP_ICON_URL='$app_icon_url'." >&2
+      echo "ERROR: Failed to download icon from APP_ICON_URL='$app_icon_url' (network/URL error)." >&2
+      return 1
+    fi
+    if [[ ! -s "$final_icon_path" ]]; then
+      rm -f "$final_icon_path"
+      echo "ERROR: Downloaded icon from APP_ICON_URL='$app_icon_url' is empty." >&2
+      return 1
+    fi
+    if command -v file >/dev/null 2>&1; then
+      mime_type="$(file -b --mime-type "$final_icon_path" || true)"
+      case "$mime_type" in
+        image/png|image/svg+xml|image/x-xpixmap|text/plain|text/xml)
+          ;;
+        *)
+          rm -f "$final_icon_path"
+          echo "ERROR: Downloaded icon from APP_ICON_URL='$app_icon_url' is not a supported image type (detected '$mime_type')." >&2
+          return 1
+          ;;
+      esac
+    fi
+    if [[ "$ext" == "png" && "$mime_type" == "image/svg+xml" ]]; then
+      mv "$final_icon_path" "$appdir/${icon_name}.svg"
+      final_icon_path="$appdir/${icon_name}.svg"
+    elif [[ "$ext" == "png" && "$mime_type" == "image/x-xpixmap" ]]; then
+      mv "$final_icon_path" "$appdir/${icon_name}.xpm"
+      final_icon_path="$appdir/${icon_name}.xpm"
+    elif [[ "$ext" == "svg" && "$mime_type" == "image/png" ]]; then
+      mv "$final_icon_path" "$appdir/${icon_name}.png"
+      final_icon_path="$appdir/${icon_name}.png"
+    elif [[ "$ext" == "xpm" && "$mime_type" == "image/png" ]]; then
+      mv "$final_icon_path" "$appdir/${icon_name}.png"
+      final_icon_path="$appdir/${icon_name}.png"
+    fi
+
+    if [[ ! -s "$final_icon_path" ]]; then
+      rm -f "$final_icon_path"
+      echo "ERROR: Downloaded icon materialization failed for APP_ICON_URL='$app_icon_url'." >&2
       return 1
     fi
     echo "$final_icon_path"

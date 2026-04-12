@@ -45,13 +45,6 @@ if ! final_icon_path="$(materialize_appdir_icon "$APPDIR" "$icon_name" "$APP_NAM
   exit 1
 fi
 
-# appimagetool requires the .desktop file at the AppDir root; copy it there if needed
-desktop_root_path="$APPDIR/$(basename "$desktop_file")"
-if [[ "$desktop_file" != "$desktop_root_path" ]]; then
-  cp "$desktop_file" "$desktop_root_path"
-  desktop_file="$desktop_root_path"
-fi
-
 echo "Desktop file: $desktop_file"
 echo "Desktop icon name: $icon_name"
 echo "Final AppDir icon: $final_icon_path"

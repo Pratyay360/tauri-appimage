@@ -165,7 +165,6 @@ materialize_appdir_icon() {
   fi
 
   if [[ -n "$app_icon_url" ]]; then
-    local mime_type=""
     ext="$(resolve_icon_extension_from_url "$app_icon_url")"
     final_icon_path="$appdir/${icon_name}.${ext}"
     if ! wget --timeout=30 --tries=2 --max-redirect=3 -qO "$final_icon_path" "$app_icon_url"; then
@@ -179,6 +178,7 @@ materialize_appdir_icon() {
       return 1
     fi
     if command -v file >/dev/null 2>&1; then
+      local mime_type
       mime_type="$(file -b --mime-type "$final_icon_path" || true)"
       case "$mime_type" in
         image/png|image/svg+xml|image/x-xpixmap)
@@ -189,31 +189,6 @@ materialize_appdir_icon() {
           return 1
           ;;
       esac
-    fi
-    if [[ "$ext" == "png" && "$mime_type" == "image/svg+xml" ]]; then
-      if [[ "$final_icon_path" != "$appdir/${icon_name}.svg" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.svg"; then
-        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.svg'." >&2
-        return 1
-      fi
-      final_icon_path="$appdir/${icon_name}.svg"
-    elif [[ "$ext" == "png" && "$mime_type" == "image/x-xpixmap" ]]; then
-      if [[ "$final_icon_path" != "$appdir/${icon_name}.xpm" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.xpm"; then
-        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.xpm'." >&2
-        return 1
-      fi
-      final_icon_path="$appdir/${icon_name}.xpm"
-    elif [[ "$ext" == "svg" && "$mime_type" == "image/png" ]]; then
-      if [[ "$final_icon_path" != "$appdir/${icon_name}.png" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.png"; then
-        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.png'." >&2
-        return 1
-      fi
-      final_icon_path="$appdir/${icon_name}.png"
-    elif [[ "$ext" == "xpm" && "$mime_type" == "image/png" ]]; then
-      if [[ "$final_icon_path" != "$appdir/${icon_name}.png" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.png"; then
-        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.png'." >&2
-        return 1
-      fi
-      final_icon_path="$appdir/${icon_name}.png"
     fi
 
     if [[ ! -s "$final_icon_path" ]]; then

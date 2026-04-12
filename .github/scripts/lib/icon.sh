@@ -25,10 +25,10 @@ discover_primary_desktop_file() {
   local app_name="$2"
   local desktop_path
 
-  desktop_path="$(find "$appdir/usr/share/applications" -type f -name '*.desktop' 2>/dev/null | sort | head -n1 || true)"
+  desktop_path="$(find "$appdir/usr/share/applications" -type f -name '*.desktop' 2>/dev/null | LC_ALL=C sort | head -n1 || true)"
 
   if [[ -z "$desktop_path" ]]; then
-    desktop_path="$(find "$appdir" -type f -name '*.desktop' 2>/dev/null | sort | head -n1 || true)"
+    desktop_path="$(find "$appdir" -type f -name '*.desktop' 2>/dev/null | LC_ALL=C sort | head -n1 || true)"
   fi
 
   if [[ -z "$desktop_path" ]]; then
@@ -86,17 +86,18 @@ find_hicolor_icon_candidate() {
 find_pixmaps_icon_candidate() {
   local appdir="$1"
   local icon_name="$2"
-  local candidate
+  local ext
 
-  candidate="$(find "$appdir/usr/share/pixmaps" -type f -name "${icon_name}.png" 2>/dev/null | sort | head -n1 || true)"
-  if [[ -z "$candidate" ]]; then
-    candidate="$(find "$appdir/usr/share/pixmaps" -type f -name "${icon_name}.svg" 2>/dev/null | sort | head -n1 || true)"
-  fi
-  if [[ -z "$candidate" ]]; then
-    candidate="$(find "$appdir/usr/share/pixmaps" -type f -name "${icon_name}.xpm" 2>/dev/null | sort | head -n1 || true)"
-  fi
+  for ext in png svg xpm; do
+    local candidate
+    candidate="$(find "$appdir/usr/share/pixmaps" -type f -name "${icon_name}.${ext}" 2>/dev/null | LC_ALL=C sort | head -n1 || true)"
+    if [[ -n "$candidate" ]]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
 
-  echo "$candidate"
+  echo ""
 }
 
 find_icon_candidate_in_rootfs() {
@@ -120,7 +121,7 @@ resolve_icon_extension_from_url() {
   url_path="${app_icon_url%%\?*}"
   url_path="${url_path%%\#*}"
   ext="${url_path##*.}"
-  ext="${ext,,}"
+  ext="$(printf '%s' "$ext" | tr '[:upper:]' '[:lower:]')"
 
   case "$ext" in
     png|svg|xpm)
@@ -166,7 +167,7 @@ materialize_appdir_icon() {
   if [[ -n "$app_icon_url" ]]; then
     ext="$(resolve_icon_extension_from_url "$app_icon_url")"
     final_icon_path="$appdir/${icon_name}.${ext}"
-    if ! wget -qO "$final_icon_path" "$app_icon_url" || [[ ! -s "$final_icon_path" ]]; then
+    if ! wget --timeout=30 --tries=2 --max-redirect=3 -qO "$final_icon_path" "$app_icon_url" || [[ ! -s "$final_icon_path" ]]; then
       rm -f "$final_icon_path"
       echo "ERROR: Failed to download icon from APP_ICON_URL='$app_icon_url'." >&2
       return 1

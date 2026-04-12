@@ -66,7 +66,7 @@ find_hicolor_icon_candidate() {
     size_dir="$(basename "$(dirname "$(dirname "$candidate")")")"
 
     if [[ "$size_dir" =~ ^([0-9]+)x([0-9]+)$ ]]; then
-      score="${BASH_REMATCH[1]}"
+      score=$(( BASH_REMATCH[1] * BASH_REMATCH[2] ))
     elif [[ "$size_dir" == "scalable" ]]; then
       score=$SCALABLE_ICON_SCORE
     fi

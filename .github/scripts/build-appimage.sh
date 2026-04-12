@@ -28,6 +28,10 @@ sed -i "s#__APP_NAME__#${APP_NAME}#g" "$APPDIR/AppRun"
 chmod +x "$APPDIR/AppRun"
 
 desktop_file="$(discover_primary_desktop_file "$APPDIR" "$APP_NAME")"
+if [[ -z "$desktop_file" || ! -f "$desktop_file" ]]; then
+  echo "ERROR: Unable to locate a desktop file inside '$APPDIR'." >&2
+  exit 1
+fi
 icon_name="$(extract_icon_name_from_desktop "$desktop_file")"
 
 if [[ -z "$icon_name" ]]; then

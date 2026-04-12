@@ -36,7 +36,10 @@ if [[ -z "$icon_name" ]]; then
   exit 1
 fi
 
-final_icon_path="$(materialize_appdir_icon "$APPDIR" "$icon_name" "$APP_NAME" "${APP_ICON_URL:-}")"
+if ! final_icon_path="$(materialize_appdir_icon "$APPDIR" "$icon_name" "$APP_NAME" "${APP_ICON_URL:-}")"; then
+  echo "ERROR: Failed to materialize icon for Icon='$icon_name'." >&2
+  exit 1
+fi
 
 echo "Desktop file: $desktop_file"
 echo "Desktop icon name: $icon_name"

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Keep scalable assets preferred over fixed-size entries by using a score above any normal icon size.
 SCALABLE_ICON_SCORE=100000
 
 create_default_desktop_file() {
@@ -177,6 +178,8 @@ materialize_appdir_icon() {
       echo "ERROR: Downloaded icon from APP_ICON_URL='$app_icon_url' is empty." >&2
       return 1
     fi
+    # Validate downloaded content when `file` is present; on minimal systems without it,
+    # we still proceed after download/size checks to preserve compatibility.
     if command -v file >/dev/null 2>&1; then
       local mime_type
       mime_type="$(file -b --mime-type "$final_icon_path" || true)"

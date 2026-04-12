@@ -166,7 +166,11 @@ materialize_appdir_icon() {
   if [[ -n "$app_icon_url" ]]; then
     ext="$(resolve_icon_extension_from_url "$app_icon_url")"
     final_icon_path="$appdir/${icon_name}.${ext}"
-    wget -qO "$final_icon_path" "$app_icon_url"
+    if ! wget -qO "$final_icon_path" "$app_icon_url" || [[ ! -s "$final_icon_path" ]]; then
+      rm -f "$final_icon_path"
+      echo "ERROR: Failed to download icon from APP_ICON_URL='$app_icon_url'." >&2
+      return 1
+    fi
     echo "$final_icon_path"
     return 0
   fi

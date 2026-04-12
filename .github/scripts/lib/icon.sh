@@ -181,7 +181,7 @@ materialize_appdir_icon() {
     if command -v file >/dev/null 2>&1; then
       mime_type="$(file -b --mime-type "$final_icon_path" || true)"
       case "$mime_type" in
-        image/png|image/svg+xml|image/x-xpixmap|text/plain|text/xml)
+        image/png|image/svg+xml|image/x-xpixmap)
           ;;
         *)
           rm -f "$final_icon_path"
@@ -191,16 +191,28 @@ materialize_appdir_icon() {
       esac
     fi
     if [[ "$ext" == "png" && "$mime_type" == "image/svg+xml" ]]; then
-      mv "$final_icon_path" "$appdir/${icon_name}.svg"
+      if [[ "$final_icon_path" != "$appdir/${icon_name}.svg" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.svg"; then
+        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.svg'." >&2
+        return 1
+      fi
       final_icon_path="$appdir/${icon_name}.svg"
     elif [[ "$ext" == "png" && "$mime_type" == "image/x-xpixmap" ]]; then
-      mv "$final_icon_path" "$appdir/${icon_name}.xpm"
+      if [[ "$final_icon_path" != "$appdir/${icon_name}.xpm" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.xpm"; then
+        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.xpm'." >&2
+        return 1
+      fi
       final_icon_path="$appdir/${icon_name}.xpm"
     elif [[ "$ext" == "svg" && "$mime_type" == "image/png" ]]; then
-      mv "$final_icon_path" "$appdir/${icon_name}.png"
+      if [[ "$final_icon_path" != "$appdir/${icon_name}.png" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.png"; then
+        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.png'." >&2
+        return 1
+      fi
       final_icon_path="$appdir/${icon_name}.png"
     elif [[ "$ext" == "xpm" && "$mime_type" == "image/png" ]]; then
-      mv "$final_icon_path" "$appdir/${icon_name}.png"
+      if [[ "$final_icon_path" != "$appdir/${icon_name}.png" ]] && ! mv "$final_icon_path" "$appdir/${icon_name}.png"; then
+        echo "ERROR: Failed to rename downloaded icon to '$appdir/${icon_name}.png'." >&2
+        return 1
+      fi
       final_icon_path="$appdir/${icon_name}.png"
     fi
 

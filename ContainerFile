@@ -66,7 +66,7 @@ RUN DEPLOY_GTK_VERSION=4 \
     /usr/local/bin/linuxdeploy \
       --appdir AppDir \
       --desktop-file AppDir/usr/share/applications/${APP_NAME}.desktop \
-      --icon-file AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png \
+      --icon-file AppDir/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png \
       --plugin gtk \
       --output appimage
 

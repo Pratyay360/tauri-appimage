@@ -38,7 +38,6 @@ jobs:
         run: |
           podman build \
             --build-arg "APP_NAME=${{ inputs.app_name }}" \
-            --build-arg "APP_ICON_URL=${{ inputs.app_icon_url }}" \
             -t rpm-appimage:build \
             -f ContainerFile \
             ${{ github.workspace }}

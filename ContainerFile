@@ -1,5 +1,4 @@
 FROM almalinux:latest AS builder
-
 ARG APP_NAME=app
 ARG APP_ICON_URL=""
 ENV APP_NAME=${APP_NAME} \
@@ -11,47 +10,33 @@ ENV APP_NAME=${APP_NAME} \
 WORKDIR /app
 COPY app.rpm .
 
-# Single RUN: install everything, clean up
 RUN dnf install -y epel-release && \
     dnf update -y && \
     dnf install -y wget findutils grep ./app.rpm && \
     dnf clean all -y && \
     rm -rf /var/cache/dnf /tmp/* /var/log/dnf.*
 
-# ── AppImage stage ────────────────────────────────────────────────────────────
-FROM builder AS appimage
-
-WORKDIR /app
-
-# Setup directories
-RUN mkdir -p /output \
+RUN mkdir -p /releases \
              AppDir/usr/bin \
              AppDir/usr/share/applications \
-             AppDir/usr/share/icons/hicolor/128*128/apps
+             AppDir/usr/share/icons/hicolor/128x128/apps
 
-# Copy binary (fail if missing)
 RUN cp /usr/bin/${APP_NAME} AppDir/usr/bin/ || \
     (echo "ERROR: /usr/bin/${APP_NAME} not found" && exit 1)
 
-# Icon handling with fallback chain
-RUN set -e; \
-    ICON_PATH="AppDir/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"; \
+RUN set -e; ICON_PATH="AppDir/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"; \
     if [ -f "/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" ]; then \
         cp "/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" "$ICON_PATH"; \
     elif [ -f "/usr/share/pixmaps/${APP_NAME}.png" ]; then \
         cp "/usr/share/pixmaps/${APP_NAME}.png" "$ICON_PATH"; \
-    elif [ -n "${APP_ICON_URL}" ]; then \
-        wget -qO "$ICON_PATH" "${APP_ICON_URL}"; \
-    else \
+        else \
         echo "ERROR: No icon found for ${APP_NAME}"; exit 1; \
     fi
 
-# Desktop entry
 RUN printf '[Desktop Entry]\nName=%s\nExec=%s\nIcon=%s\nType=Application\nCategories=Utility;\n' \
     "${APP_NAME}" "${APP_NAME}" "${APP_NAME}" \
     > AppDir/usr/share/applications/${APP_NAME}.desktop
 
-# Download linuxdeploy + gtk plugin
 RUN wget -qO /usr/local/bin/linuxdeploy \
       https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && \
     chmod +x /usr/local/bin/linuxdeploy
@@ -60,7 +45,6 @@ RUN wget -qO /usr/local/bin/linuxdeploy-plugin-gtk.sh \
       https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh && \
     chmod +x /usr/local/bin/linuxdeploy-plugin-gtk.sh
 
-# Build AppImage
 RUN DEPLOY_GTK_VERSION=4 \
     OUTPUT=/output/${APP_NAME}-x86_64.AppImage \
     /usr/local/bin/linuxdeploy \
@@ -70,5 +54,4 @@ RUN DEPLOY_GTK_VERSION=4 \
       --plugin gtk \
       --output appimage
 
-# Verify output exists
 RUN test -f /output/${APP_NAME}-x86_64.AppImage

@@ -11,7 +11,7 @@ COPY app.rpm .
 
 RUN dnf install -y epel-release && \
     dnf update -y && \
-    dnf install -y wget findutils grep cpio ./app.rpm && \
+    dnf install -y wget findutils grep cpio file ./app.rpm && \
     dnf clean all -y && \
     rm -rf /var/cache/dnf /tmp/* /var/log/dnf.*
 

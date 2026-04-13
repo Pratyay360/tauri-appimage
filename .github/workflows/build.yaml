@@ -26,11 +26,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman
+          sudo apt-get install -y docker
 
       - name: Build container image
         run: |
-          podman build \
+          docker build \
             --build-arg "APP_NAME=${{ inputs.app_name }}" \
             -t rpm-appimage:build \
             -f ContainerFile \
@@ -38,9 +38,9 @@ jobs:
 
       - name: Extract AppImage from container
         run: |
-          CID=$(podman create rpm-appimage:build)
-          podman cp "$CID:/output/${{ inputs.app_name }}-x86_64.AppImage" .
-          podman rm "$CID"
+          CID=$(docker create rpm-appimage:build)
+          docker cp "$CID:/output/${{ inputs.app_name }}-x86_64.AppImage" .
+          docker rm "$CID"
           file "${{ inputs.app_name }}-x86_64.AppImage"
           test -x "${{ inputs.app_name }}-x86_64.AppImage"
 
@@ -49,3 +49,12 @@ jobs:
         with:
           name: ${{ inputs.app_name }}-appimage
           path: "${{ inputs.app_name }}-x86_64.AppImage"
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: ${{ inputs.app_name }}-x86_64.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

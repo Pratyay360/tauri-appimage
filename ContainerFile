@@ -1,6 +1,4 @@
 FROM almalinux:latest AS builder
-ARG APP_NAME=app
-ARG APP_ICON_URL=""
 ENV APP_NAME=${APP_NAME} \
     APP_ICON_URL=${APP_ICON_URL} \
     NO_STRIP=1 \

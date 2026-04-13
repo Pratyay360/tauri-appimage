@@ -1,5 +1,4 @@
-# Pinned AlmaLinux 9 (reproducible, not "latest")
-FROM almalinux@sha256:8d625023fd4aa01c3c249e1d6f7c6e44f1a50d76ddab4d1c1db89b5d4a0c7e3b AS builder
+FROM almalinux@latest AS builder
 
 ARG APP_NAME=app
 ARG APP_ICON_URL=""

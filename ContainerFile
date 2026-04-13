@@ -14,7 +14,7 @@ COPY app.rpm .
 # Single RUN: install everything, clean up
 RUN dnf install -y epel-release && \
     dnf update -y && \
-    dnf install -y wget findutils grep redhat-lsb-core ./app.rpm && \
+    dnf install -y wget findutils grep ./app.rpm && \
     dnf clean all -y && \
     rm -rf /var/cache/dnf /tmp/* /var/log/dnf.*
 

@@ -32,23 +32,22 @@ jobs:
         run: |
           docker build \
             --build-arg "APP_NAME=${{ inputs.app_name }}" \
-            -t rpm-appimage:build \
+            -t rpm_appimage:build \
             -f ContainerFile \
             ${{ github.workspace }}
 
       - name: Extract AppImage from container
         run: |
-          CID=$(docker create rpm-appimage:build)
-          docker cp "$CID:/output/${{ inputs.app_name }}-x86_64.AppImage" .
+          CID=$(docker create rpm_appimage:build)
+          docker cp "$CID:/output/rpm_app.AppImage" .
           docker rm "$CID"
-          file "${{ inputs.app_name }}-x86_64.AppImage"
-          test -x "${{ inputs.app_name }}-x86_64.AppImage"
+          file "rpm_app.AppImage"
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.app_name }}-appimage
-          path: "${{ inputs.app_name }}-x86_64.AppImage"
+          name: rename artifact
+          run: mv "rpm_app.AppImage" "${{ inputs.app_name }}-x86_64.AppImage"
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@master

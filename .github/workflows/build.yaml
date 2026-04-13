@@ -1,5 +1,4 @@
 name: Build AppImage
-
 on:
   workflow_dispatch:
     inputs:
@@ -13,18 +12,18 @@ on:
         type: string
       app_icon_url:
         description: >-
-          Fallback icon URL (PNG/SVG/XPM). Used only if the RPM does not ship
-          usr/share/icons/hicolor/*/apps/<app_name>.*
+          Fallback icon URL (PNG/SVG). Used only if the RPM does not ship its own icon.
         required: false
         type: string
         default: ""
+  release:
+    types: [created]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,39 +31,34 @@ jobs:
       - name: Download RPM
         run: wget -qO app.rpm "${{ inputs.rpm_url }}"
 
-      - name: Install Podman and dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman wget squashfs-tools libfuse2
+          sudo apt-get install -y podman
 
       - name: Build container image
         run: |
           podman build \
-          --build-arg "APP_NAME=${{ inputs.app_name }}" \
-          -t rpm-appimage:build \
-          -f ContainerFile \
-          .
+            --build-arg "APP_NAME=${{ inputs.app_name }}" \
+            --build-arg "APP_ICON_URL=${{ inputs.app_icon_url }}" \
+            -t rpm-appimage:build \
+            -f ContainerFile \
+            .
 
-      - name: Build AppImage from image rootfs
-        env:
-          APP_NAME: ${{ inputs.app_name }}
-          APP_ICON_URL: ${{ inputs.app_icon_url }}
-          VERSION: ${{ github.run_number }}
+      - name: Extract AppImage from container
         run: |
-          chmod +x .github/scripts/build-appimage.sh
-          .github/scripts/build-appimage.sh
+          CID=$(podman create rpm-appimage:build)
+          podman cp "$CID:/output/${{ inputs.app_name }}-x86_64.AppImage" .
+          podman rm "$CID"
 
-      - name: Upload AppImage
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: appimage
-          path: "*.AppImage"
+          name: ${{ inputs.app_name }}-appimage
+          path: "${{ inputs.app_name }}-x86_64.AppImage"
 
-      - name: upload to release
-        if: ${{ github.event_name == 'release' }}
-        uses: softprops/action-gh-release@master
+      - name: Attach to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: "*.AppImage"
-          asset_name: ${{ inputs.app_name }}.AppImage
-          asset_content_type: application/octet-stream
+          files: "${{ inputs.app_name }}-x86_64.AppImage"

@@ -26,11 +26,11 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker
+          sudo apt-get install -y podman
 
       - name: Build container image
         run: |
-          docker build \
+          podman build \
             --build-arg "APP_NAME=${{ inputs.app_name }}" \
             -t rpm_appimage:build \
             -f ContainerFile \
@@ -38,9 +38,9 @@ jobs:
 
       - name: Extract AppImage from container
         run: |
-          CID=$(docker create rpm_appimage:build)
-          docker cp "$CID:/output/rpm_app.AppImage" .
-          docker rm "$CID"
+          CID=$(podman create rpm_appimage:build)
+          podman cp "$CID:/output/rpm_app.AppImage" .
+          podman rm "$CID"
           file "rpm_app.AppImage"
 
       - name: Upload AppImage artifact

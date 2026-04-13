@@ -43,6 +43,7 @@ jobs:
             --build-arg "APP_ICON_URL=${{ inputs.app_icon_url }}" \
             -t rpm-appimage:build \
             -f ContainerFile \
+            --layers=false \    # Fresh build each time (RPMs vary)
             .
 
       - name: Extract AppImage from container
@@ -50,6 +51,9 @@ jobs:
           CID=$(podman create rpm-appimage:build)
           podman cp "$CID:/output/${{ inputs.app_name }}-x86_64.AppImage" .
           podman rm "$CID"
+          # Quick validation
+          file "${{ inputs.app_name }}-x86_64.AppImage"
+          test -x "${{ inputs.app_name }}-x86_64.AppImage"
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4

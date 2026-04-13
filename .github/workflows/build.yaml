@@ -43,8 +43,7 @@ jobs:
             --build-arg "APP_ICON_URL=${{ inputs.app_icon_url }}" \
             -t rpm-appimage:build \
             -f ContainerFile \
-            --layers=false \    # Fresh build each time (RPMs vary)
-            .
+            ${{ github.workspace }}
 
       - name: Extract AppImage from container
         run: |

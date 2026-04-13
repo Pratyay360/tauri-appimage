@@ -1,4 +1,4 @@
-FROM almalinux@latest AS builder
+FROM almalinux:latest AS builder
 
 ARG APP_NAME=app
 ARG APP_ICON_URL=""

@@ -27,7 +27,7 @@ WORKDIR /app
 RUN mkdir -p /output \
              AppDir/usr/bin \
              AppDir/usr/share/applications \
-             AppDir/usr/share/icons/hicolor/256x256/apps
+             AppDir/usr/share/icons/hicolor/128*128/apps
 
 # Copy binary (fail if missing)
 RUN cp /usr/bin/${APP_NAME} AppDir/usr/bin/ || \

@@ -35,9 +35,9 @@ RUN cp /usr/bin/${APP_NAME} AppDir/usr/bin/ || \
 
 # Icon handling with fallback chain
 RUN set -e; \
-    ICON_PATH="AppDir/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"; \
-    if [ -f "/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" ]; then \
-        cp "/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png" "$ICON_PATH"; \
+    ICON_PATH="AppDir/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"; \
+    if [ -f "/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" ]; then \
+        cp "/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png" "$ICON_PATH"; \
     elif [ -f "/usr/share/pixmaps/${APP_NAME}.png" ]; then \
         cp "/usr/share/pixmaps/${APP_NAME}.png" "$ICON_PATH"; \
     elif [ -n "${APP_ICON_URL}" ]; then \

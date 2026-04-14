@@ -43,7 +43,20 @@ RUN rm -f \
     AppDir/usr/lib/libGL*.so* \
     AppDir/usr/lib/libEGL*.so* \
     AppDir/usr/lib/libdrm.so* \
-    AppDir/usr/lib/libgbm.so*
+    AppDir/usr/lib/libgbm.so* \
+    AppDir/usr/lib64/libharfbuzz.so* \
+    AppDir/usr/lib64/libharfbuzz-icu.so* \
+    AppDir/usr/lib64/libfreetype.so* \
+    AppDir/usr/lib64/libfontconfig.so* \
+    AppDir/usr/lib64/libwayland-client.so* \
+    AppDir/usr/lib64/libwayland-cursor.so* \
+    AppDir/usr/lib64/libwayland-egl.so* \
+    AppDir/usr/lib64/libxcb.so* \
+    AppDir/usr/lib64/libX11.so* \
+    AppDir/usr/lib64/libGL*.so* \
+    AppDir/usr/lib64/libEGL*.so* \
+    AppDir/usr/lib64/libdrm.so* \
+    AppDir/usr/lib64/libgbm.so*
 
 # Tauri apps should use the host distro's WebKitGTK/GTK stack at runtime.
 # Keeping these libraries inside the AppImage can cause runtime ABI mismatches.

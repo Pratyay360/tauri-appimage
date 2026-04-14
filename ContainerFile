@@ -4,22 +4,23 @@ ARG APP_NAME
 ENV APP_NAME=${APP_NAME} \
     NO_STRIP=1 \
     APPIMAGE_EXTRACT_AND_RUN=1 \
-    ARCH=x86_64
+    ARCH=x86_64 \
+    DEPLOY_GTK_VERSION=3
 
 WORKDIR /app
 COPY app.rpm .
 
 RUN dnf install -y epel-release && \
     dnf update -y && \
-    dnf install -y wget findutils grep cpio file ./app.rpm && \
+    dnf install -y wget findutils grep cpio file webkit2gtk4.1-devel ./app.rpm && \
     dnf clean all -y && \
     rm -rf /var/cache/dnf /tmp/* /var/log/dnf.*
 
-RUN wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage \
+RUN wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage  \
     -O /usr/local/bin/linuxdeploy && \
     chmod +x /usr/local/bin/linuxdeploy
 
-RUN wget -q https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh \
+RUN wget -q https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh  \
     -O /usr/local/bin/linuxdeploy-plugin-gtk.sh && \
     chmod +x /usr/local/bin/linuxdeploy-plugin-gtk.sh
 
@@ -29,35 +30,36 @@ RUN mkdir -p AppDir && \
     cd AppDir && \
     rpm2cpio /app/app.rpm | cpio -idmv
 
-# Tauri apps should use the host distro's WebKitGTK/GTK stack at runtime.
-# Keeping these libraries inside the AppImage causes crashes on newer hosts
-# (e.g. SIGTRAP in libglib/libwebkit due to ABI/runtime mismatches).
-RUN set -eux; \
-    for pattern in \
-      'libwebkit2gtk-*.so*' \
-      'libjavascriptcoregtk-*.so*' \
-      'libsoup-*.so*' \
-      'libgtk-3.so*' \
-      'libgdk-3.so*' \
-      'libgdk_pixbuf-2.0.so*' \
-      'libglib-2.0.so*' \
-      'libgobject-2.0.so*' \
-      'libgio-2.0.so*' \
-      'libpango-*.so*' \
-      'libcairo.so*' \
-      'libatk-*.so*' \
-      'libatk-bridge-*.so*' \
-      'libatspi.so*' \
-      'libgst*.so*'; do \
-      find /app/AppDir/usr/lib* -maxdepth 1 -type f -name "${pattern}" -delete || true; \
-    done
+RUN rm -f \
+    AppDir/usr/lib/libharfbuzz.so* \
+    AppDir/usr/lib/libharfbuzz-icu.so* \
+    AppDir/usr/lib/libfreetype.so* \
+    AppDir/usr/lib/libfontconfig.so* \
+    AppDir/usr/lib/libwayland-client.so* \
+    AppDir/usr/lib/libwayland-cursor.so* \
+    AppDir/usr/lib/libwayland-egl.so* \
+    AppDir/usr/lib/libxcb.so* \
+    AppDir/usr/lib/libX11.so* \
+    AppDir/usr/lib/libGL*.so* \
+    AppDir/usr/lib/libEGL*.so* \
+    AppDir/usr/lib/libdrm.so* \
+    AppDir/usr/lib/libgbm.so*
+
 
 RUN OUTPUT=rpm_app.AppImage \
-    /usr/local/bin/linuxdeploy \
+     /usr/local/bin/linuxdeploy \
       --appdir AppDir \
       --executable "AppDir/usr/bin/${APP_NAME}" \
       --desktop-file AppDir/usr/share/applications/[a-zA-Z]*.desktop \
       --icon-file AppDir/usr/share/icons/hicolor/128x128/apps/[a-zA-Z]*.png \
+      --exclude-library libharfbuzz.so \
+      --exclude-library libharfbuzz-icu.so \
+      --exclude-library libfreetype.so \
+      --exclude-library libfontconfig.so \
+      --exclude-library libwayland-client.so \
+      --exclude-library libwayland-egl.so \
+      --exclude-library libwayland-cursor.so \
+      --plugin gtk \
       --output appimage && \
     mkdir -p /output && \
     mv rpm_app.AppImage /output/ && \

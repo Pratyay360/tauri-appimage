@@ -4,7 +4,9 @@ ARG APP_NAME
 ENV APP_NAME=${APP_NAME} \
     NO_STRIP=1 \
     APPIMAGE_EXTRACT_AND_RUN=1 \
-    ARCH=x86_64
+    ARCH=x86_64 \
+    DEPLOY_GTK_VERSION=3
+
 WORKDIR /app
 COPY app.rpm .
 
@@ -28,14 +30,35 @@ RUN mkdir -p AppDir && \
     cd AppDir && \
     rpm2cpio /app/app.rpm | cpio -idmv
 
+RUN rm -f \
+    AppDir/usr/lib/libharfbuzz.so* \
+    AppDir/usr/lib/libharfbuzz-icu.so* \
+    AppDir/usr/lib/libfreetype.so* \
+    AppDir/usr/lib/libfontconfig.so* \
+    AppDir/usr/lib/libwayland-client.so* \
+    AppDir/usr/lib/libwayland-cursor.so* \
+    AppDir/usr/lib/libwayland-egl.so* \
+    AppDir/usr/lib/libxcb.so* \
+    AppDir/usr/lib/libX11.so* \
+    AppDir/usr/lib/libGL*.so* \
+    AppDir/usr/lib/libEGL*.so* \
+    AppDir/usr/lib/libdrm.so* \
+    AppDir/usr/lib/libgbm.so*
 
 
 RUN OUTPUT=rpm_app.AppImage \
-    /usr/local/bin/linuxdeploy \
+     /usr/local/bin/linuxdeploy \
       --appdir AppDir \
       --executable "AppDir/usr/bin/${APP_NAME}" \
       --desktop-file AppDir/usr/share/applications/[a-zA-Z]*.desktop \
       --icon-file AppDir/usr/share/icons/hicolor/128x128/apps/[a-zA-Z]*.png \
+      --exclude-library libharfbuzz.so \
+      --exclude-library libharfbuzz-icu.so \
+      --exclude-library libfreetype.so \
+      --exclude-library libfontconfig.so \
+      --exclude-library libwayland-client.so \
+      --exclude-library libwayland-egl.so \
+      --exclude-library libwayland-cursor.so \
       --plugin gtk \
       --output appimage && \
     mkdir -p /output && \

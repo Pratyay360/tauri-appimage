@@ -5,57 +5,39 @@ ENV APP_NAME=${APP_NAME} \
     NO_STRIP=1 \
     APPIMAGE_EXTRACT_AND_RUN=1 \
     ARCH=x86_64
-
 WORKDIR /app
 COPY app.rpm .
 
 RUN dnf install -y epel-release && \
     dnf update -y && \
-    dnf install -y wget findutils grep cpio file ./app.rpm webkit2gtk4.1 && \
+    dnf install -y wget findutils grep cpio file webkit2gtk4.1-devel ./app.rpm && \
     dnf clean all -y && \
     rm -rf /var/cache/dnf /tmp/* /var/log/dnf.*
 
-RUN wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage \
+RUN wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage  \
     -O /usr/local/bin/linuxdeploy && \
     chmod +x /usr/local/bin/linuxdeploy
 
-RUN wget -q https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh \
+RUN wget -q https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh  \
     -O /usr/local/bin/linuxdeploy-plugin-gtk.sh && \
     chmod +x /usr/local/bin/linuxdeploy-plugin-gtk.sh
 
 WORKDIR /app
 
-RUN mkdir -p AppDir/usr/bin \
-    AppDir/usr/share/applications \
-    AppDir/usr/share/icons/hicolor/128x128/apps \
-    AppDir/usr/libexec/webkit2gtk-4.1
+RUN mkdir -p AppDir && \
+    cd AppDir && \
+    rpm2cpio /app/app.rpm | cpio -idmv
 
-RUN cp /usr/bin/${APP_NAME} AppDir/usr/bin/ && \
-    cp /usr/share/applications/${APP_NAME}.desktop AppDir/usr/share/applications/ 2>/dev/null || \
-    cp /usr/share/applications/*.desktop AppDir/usr/share/applications/ && \
-    cp /usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png AppDir/usr/share/icons/hicolor/128x128/apps/ 2>/dev/null || \
-    cp /usr/share/icons/hicolor/128x128/apps/*.png AppDir/usr/share/icons/hicolor/128x128/apps/
 
-RUN cp /usr/libexec/webkit2gtk-4.1/WebKitNetworkProcess AppDir/usr/libexec/webkit2gtk-4.1/ && \
-    cp /usr/libexec/webkit2gtk-4.1/WebKitWebProcess AppDir/usr/libexec/webkit2gtk-4.1/ && \
-    cp /usr/libexec/webkit2gtk-4.1/WebKitGPUProcess AppDir/usr/libexec/webkit2gtk-4.1/ 2>/dev/null || true
 
-RUN cat > AppDir/AppRun << 'EOF'
-
-APPDIR="$(dirname "$(readlink -f "$0")")"
-export WEBKIT_EXEC_PATH="$APPDIR/usr/libexec/webkit2gtk-4.1"
-exec "$APPDIR/usr/bin/${APP_NAME}" "$@"
-EOF
-
-RUN chmod +x AppDir/AppRun && \
-    sed -i "s/\${APP_NAME}/${APP_NAME}/g" AppDir/AppRun
-
-RUN /usr/local/bin/linuxdeploy \
+RUN OUTPUT=rpm_app.AppImage \
+    /usr/local/bin/linuxdeploy \
       --appdir AppDir \
       --executable "AppDir/usr/bin/${APP_NAME}" \
-      --desktop-file AppDir/usr/share/applications/*.desktop \
-      --icon-file AppDir/usr/share/icons/hicolor/128x128/apps/*.png \
+      --desktop-file AppDir/usr/share/applications/[a-zA-Z]*.desktop \
+      --icon-file AppDir/usr/share/icons/hicolor/128x128/apps/[a-zA-Z]*.png \
+      --plugin gtk \
       --output appimage && \
     mkdir -p /output && \
-    mv *.AppImage /output/rpm_app.AppImage && \
+    mv rpm_app.AppImage /output/ && \
     test -f /output/rpm_app.AppImage

@@ -29,6 +29,29 @@ RUN mkdir -p AppDir && \
     cd AppDir && \
     rpm2cpio /app/app.rpm | cpio -idmv
 
+# Tauri apps should use the host distro's WebKitGTK/GTK stack at runtime.
+# Keeping these libraries inside the AppImage causes crashes on newer hosts
+# (e.g. SIGTRAP in libglib/libwebkit due to ABI/runtime mismatches).
+RUN set -eux; \
+    for pattern in \
+      'libwebkit2gtk-*.so*' \
+      'libjavascriptcoregtk-*.so*' \
+      'libsoup-*.so*' \
+      'libgtk-3.so*' \
+      'libgdk-3.so*' \
+      'libgdk_pixbuf-2.0.so*' \
+      'libglib-2.0.so*' \
+      'libgobject-2.0.so*' \
+      'libgio-2.0.so*' \
+      'libpango-*.so*' \
+      'libcairo.so*' \
+      'libatk-*.so*' \
+      'libatk-bridge-*.so*' \
+      'libatspi.so*' \
+      'libgst*.so*'; do \
+      find /app/AppDir/usr/lib* -maxdepth 1 -type f -name "${pattern}" -delete || true; \
+    done
+
 RUN OUTPUT=rpm_app.AppImage \
     /usr/local/bin/linuxdeploy \
       --appdir AppDir \

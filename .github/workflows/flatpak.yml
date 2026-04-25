@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y podman flatpak ostree gjs
+          sudo apt-get install -y podman flatpak ostree gjs gir1.2-flatpak-1.0
 
       - name: Install flatpod
         run: |

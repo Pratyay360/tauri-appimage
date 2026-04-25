@@ -52,7 +52,7 @@ jobs:
           podman build \
             --build-arg "APP_NAME=${{ inputs.app_name }}" \
             -t app:build \
-            -f ContainerFile \
+            -f DockerFile \
             ${{ github.workspace }}
 
       - name: Convert container to Flatpak runtime via flatpod

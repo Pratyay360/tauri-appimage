@@ -1,0 +1,12 @@
+FROM almalinux:latest
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+
+WORKDIR /app
+COPY app.rpm .
+
+RUN dnf install -y epel-release && \
+    dnf update -y && \
+    dnf install -y webkit2gtk4.1 ./app.rpm && \
+    dnf clean all -y && \
+    rm -rf /var/cache/dnf /tmp/*

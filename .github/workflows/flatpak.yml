@@ -12,11 +12,11 @@ on:
         type: string
       app_id:
         description: Flatpak app ID (e.g. com.vendor.AppName)
-        required: true
+        required: false
         type: string
       version:
         description: Release version tag (e.g. v1.2.3)
-        required: true
+        required: false
         type: string
 
 jobs:

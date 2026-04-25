@@ -1,0 +1,113 @@
+name: Build Flatpak
+on:
+  workflow_dispatch:
+    inputs:
+      rpm_url:
+        description: URL of the RPM to package
+        required: true
+        type: string
+      app_name:
+        description: Binary name under /usr/bin in the RPM
+        required: true
+        type: string
+      app_id:
+        description: Flatpak app ID (e.g. com.vendor.AppName)
+        required: true
+        type: string
+      version:
+        description: Release version tag (e.g. v1.2.3)
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download RPM
+        run: wget -qO app.rpm "${{ inputs.rpm_url }}"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman flatpak ostree gjs
+
+      - name: Install flatpod
+        run: |
+          wget -qO /usr/local/bin/flatpod \
+            https://raw.githubusercontent.com/refi64/flatpod/master/flatpod
+          chmod +x /usr/local/bin/flatpod
+
+      - name: Add Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build container image
+        run: |
+          podman build \
+            --build-arg "APP_NAME=${{ inputs.app_name }}" \
+            -t app:build \
+            -f ContainerFile \
+            ${{ github.workspace }}
+
+      - name: Convert container to Flatpak runtime via flatpod
+        run: |
+          # flatpod derives runtime ID from image name, or override with -i
+          flatpod -i "${{ inputs.app_id }}.runtime" -b "${{ inputs.version }}" \
+            app:build
+
+      - name: Generate app manifest
+        env:
+          APP_ID: ${{ inputs.app_id }}
+          APP_NAME: ${{ inputs.app_name }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          cat > "${APP_ID}.yml" << EOF
+          app-id: ${APP_ID}
+          runtime: ${APP_ID}.runtime
+          runtime-version: '${VERSION}'
+          sdk: ${APP_ID}.runtime
+          command: ${APP_NAME}
+          finish-args:
+            - --share=network
+            - --share=ipc
+            - --socket=wayland
+            - --socket=fallback-x11
+            - --device=dri
+          modules:
+            - name: ${APP_NAME}
+              buildsystem: simple
+              build-commands:
+                - echo "app installed in runtime"
+          EOF
+
+      - name: Build Flatpak app bundle
+        env:
+          APP_ID: ${{ inputs.app_id }}
+          APP_NAME: ${{ inputs.app_name }}
+        run: |
+          flatpak-builder --user --install \
+            --force-clean build-dir "${APP_ID}.yml"
+
+          flatpak build-bundle \
+            ~/.local/share/flatpak/repo \
+            "${APP_NAME}-x86_64.flatpak" \
+            "${APP_ID}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app_name }}-x86_64
+          path: ${{ inputs.app_name }}-x86_64.flatpak
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.app_name }} ${{ inputs.version }}
+          files: ${{ inputs.app_name }}-x86_64.flatpak
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
